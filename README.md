@@ -57,10 +57,6 @@ _Complete each task in the order they appear. Use [GitHub Task List](https://hel
 - [ ] Write scraped data to a file named `output.json`.
 - [ ] **Add, commit, and push to GitHub**.
 
-##### Stretch Challenges
-
-- [ ] TBA 02/10!
-
 ## Resources
 
 ### Lesson Plans
