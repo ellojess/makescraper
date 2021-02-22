@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/extensions"
 )
 
 // AmazonResult struct that can be used for json
@@ -50,6 +51,8 @@ func main() {
 	// trigger callback functions when certain event happens
 	c := colly.NewCollector()
 
+	extensions.RandomUserAgent(c) // have Colly generate new User Agent string before every request
+
 	// On every a element which has href attribute call callback
 	// parse HTML
 	c.OnHTML("div.s-result-list.s-search-results.sg-row", func(e *colly.HTMLElement) {
@@ -84,6 +87,7 @@ func main() {
 	// request Amazon's result page
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("Visiting", r.URL.String())
+		fmt.Println("UserAgent", r.Headers.Get("User-Agent"))
 	})
 
 	// Start scraping on https://www.amazon.com
