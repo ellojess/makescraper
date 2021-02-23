@@ -2,8 +2,14 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"regexp"
+
+	"encoding/csv"
+	// "encoding/json"
+	"io/ioutil"
+	"log"
+	"os"
+	"time"
 
 	"github.com/gocolly/colly"
 	"github.com/gocolly/colly/extensions"
@@ -12,6 +18,24 @@ import (
 // AmazonResult struct that can be used for json
 type AmazonResult struct {
 	Content []string `json:"content"`
+}
+
+func readFile(file string) string {
+
+	fileContents, err := ioutil.ReadFile(file)
+	if err != nil {
+		panic(err)
+	}
+	return string(fileContents)
+}
+
+func writeFile(file string, data string) {
+	bytesToWrite := []byte(data)
+	err := ioutil.WriteFile(file, bytesToWrite, 0644)
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func formatPrice(price *string) {
@@ -35,13 +59,35 @@ func formatStars(stars *string) {
 	}
 }
 
-// Writes data onto file
-func writeFile(name string, data string) {
-	bytesToWrite := []byte(data)
-	err := ioutil.WriteFile(name, bytesToWrite, 0644)
+func writeToJSON() {
+	// fileName := "output.json"
+	// file, err := os.Create(fileName)
+	// if err != nil {
+	// 	log.Fatalf("Could not create %s", fileName)
+	// }
+
+	// file, _ := json.MarshalIndent(data, "", " ")
+
+	// _ = ioutil.WriteFile("output.json", file, 0644)
+
+	// if err != nil {
+	//   log.Fatalf("Could not create %s", fileName)
+	// }
+}
+
+func writeToCSV() {
+	fileName := "output.csv"
+	file, err := os.Create(fileName)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Could not create %s", fileName)
 	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	writer.Write([]string{"Product Name", "Stars", "Price"})
+
 }
 
 // main() contains code adapted from example found in Colly's docs:
@@ -49,7 +95,15 @@ func writeFile(name string, data string) {
 func main() {
 	// Instantiate default collector; gives access to methods allowing
 	// trigger callback functions when certain event happens
-	c := colly.NewCollector()
+	c := colly.NewCollector(
+		colly.Async(true),
+	)
+
+	// set random delays between every request
+	c.Limit(&colly.LimitRule{
+		RandomDelay: 2 * time.Second,
+		Parallelism: 4, // max number of requests to be executed at a time
+	})
 
 	extensions.RandomUserAgent(c) // have Colly generate new User Agent string before every request
 
@@ -72,7 +126,7 @@ func main() {
 				return
 			}
 
-			// [REVIEW] inconsistency found when getting stars and price
+			// [REVIEW] inconsistency found when getting stars and price 
 			stars = e.ChildText("span.a-icon-alt")
 			formatStars(&stars)
 
@@ -80,6 +134,7 @@ func main() {
 			formatPrice(&price)
 
 			fmt.Printf("Product Name: %s \nStars: %s \nPrice: %s \n", productName, stars, price)
+
 		})
 	})
 
@@ -91,5 +146,13 @@ func main() {
 	})
 
 	// Start scraping on https://www.amazon.com
-	c.Visit("https://www.amazon.com/s?k=alpaca+plush&ref=nb_sb_noss_1")
+	// c.Visit("https://www.amazon.com/s?k=alpaca+plush&ref=nb_sb_noss_1")
+	// scrape data from 20 pages on Amazon result page
+	for i := 1; i <= 20; i++ {
+		fullURL := fmt.Sprintf("https://www.amazon.com/s?k=alpaca+plush&page=%d", i)
+		c.Visit(fullURL)
+	}
+	c.Wait() // wait until all concurrent requests are done
+
+	writeToCSV()
 }
