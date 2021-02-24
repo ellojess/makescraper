@@ -17,6 +17,10 @@ import (
 
 // AmazonResult struct that can be used for json
 type AmazonResult struct {
+	// ProductName string `json:"productName"`
+	// Stars string `json:"stars"`
+	// Price string `json:"price"`
+
 	Content []string `json:"content"`
 }
 
@@ -59,22 +63,6 @@ func formatStars(stars *string) {
 	}
 }
 
-func writeToJSON() {
-	// fileName := "output.json"
-	// file, err := os.Create(fileName)
-	// if err != nil {
-	// 	log.Fatalf("Could not create %s", fileName)
-	// }
-
-	// file, _ := json.MarshalIndent(data, "", " ")
-
-	// _ = ioutil.WriteFile("output.json", file, 0644)
-
-	// if err != nil {
-	//   log.Fatalf("Could not create %s", fileName)
-	// }
-}
-
 func writeToCSV() {
 	fileName := "output.csv"
 	file, err := os.Create(fileName)
@@ -93,6 +81,7 @@ func writeToCSV() {
 // main() contains code adapted from example found in Colly's docs:
 // http://go-colly.org/docs/examples/basic/
 func main() {
+
 	// Instantiate default collector; gives access to methods allowing
 	// trigger callback functions when certain event happens
 	c := colly.NewCollector(
@@ -107,16 +96,25 @@ func main() {
 
 	extensions.RandomUserAgent(c) // have Colly generate new User Agent string before every request
 
+	// hold data thats been scraped
+	// var dataSlice []string
+
 	// On every a element which has href attribute call callback
 	// parse HTML
-	c.OnHTML("div.s-result-list.s-search-results.sg-row", func(e *colly.HTMLElement) {
-		link := e.Attr("href")
 
-		// Print link
-		fmt.Printf("Link found: %q -> %s\n", e.Text, link)
+	// whole page
+	// #search > div.s-desktop-width-max.s-desktop-content.sg-row > div.sg-col-16-of-20.sg-col.sg-col-8-of-12.sg-col-12-of-16 > div > span:nth-child(4) > div.s-main-slot.s-result-list.s-search-results.sg-row >
+
+	// one item
+	// #search > div.s-desktop-width-max.s-desktop-content.sg-row > div.sg-col-16-of-20.sg-col.sg-col-8-of-12.sg-col-12-of-16 > div > span:nth-child(4) > div.s-main-slot.s-result-list.s-search-results.sg-row > div:nth-child(13) > div > span > div > div
+	// #search > div.s-desktop-width-max.s-desktop-content.sg-row > div.sg-col-16-of-20.sg-col.sg-col-8-of-12.sg-col-12-of-16 > div > span:nth-child(4) > div.s-main-slot.s-result-list.s-search-results.sg-row > div:nth-child(13) > div > span > div > div
+
+	c.OnHTML("div.s-result-list.s-search-results.sg-row", func(e *colly.HTMLElement) {
+		// c.OnHTML("div.s-result-item.s-search-results.sg-col-inner", func(e *colly.HTMLElement) {
 
 		// loop through products in the search result list
 		e.ForEach("div.a-section.a-spacing-medium", func(_ int, e *colly.HTMLElement) {
+			// e.ForEach("div.s-result-item.s-search-results.sg-col-inner", func(_ int, e *colly.HTMLElement) {
 			// access wanted values with css selectors
 			var productName, stars, price string
 
@@ -126,14 +124,35 @@ func main() {
 				return
 			}
 
-			// [REVIEW] inconsistency found when getting stars and price 
+			// [REVIEW] inconsistency found when getting stars and price
 			stars = e.ChildText("span.a-icon-alt")
 			formatStars(&stars)
 
 			price = e.ChildText("span.a-price > span.a-offscreen")
 			formatPrice(&price)
 
+			// print data being scraped
 			fmt.Printf("Product Name: %s \nStars: %s \nPrice: %s \n", productName, stars, price)
+
+			// dataSlice = append(dataSlice, e.Text)
+			// data := AmazonResult{Content: dataSlice}
+			// fmt.Println(data)
+
+			// scrapedJSON, _ := json.MarshalIndent(data, "", "    ")
+			// fmt.Println(string(scrapedJSON))
+
+			// // write to JSON file
+			// _ = ioutil.WriteFile("output.json", scrapedJSON, 0644)
+
+			// // to append to a file
+			// // create the file if it doesn't exists with O_CREATE, Set the file up for read write,
+			// // add the append flag and set the permission
+			// f, err := os.OpenFile("/var/log/debug-web.log", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// // write to file, f.Write()
+			// f.Write(scrapedJSON)
 
 		})
 	})
@@ -155,4 +174,5 @@ func main() {
 	c.Wait() // wait until all concurrent requests are done
 
 	writeToCSV()
+	// writeToJSON()
 }
