@@ -5,7 +5,7 @@ import (
 	"regexp"
 
 	"encoding/csv"
-	// "encoding/json"
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"os"
@@ -17,10 +17,6 @@ import (
 
 // AmazonResult struct that can be used for json
 type AmazonResult struct {
-	// ProductName string `json:"productName"`
-	// Stars string `json:"stars"`
-	// Price string `json:"price"`
-
 	Content []string `json:"content"`
 }
 
@@ -97,7 +93,7 @@ func main() {
 	extensions.RandomUserAgent(c) // have Colly generate new User Agent string before every request
 
 	// hold data thats been scraped
-	// var dataSlice []string
+	var dataSlice []string
 
 	// On every a element which has href attribute call callback
 	// parse HTML
@@ -134,25 +130,25 @@ func main() {
 			// print data being scraped
 			fmt.Printf("Product Name: %s \nStars: %s \nPrice: %s \n", productName, stars, price)
 
-			// dataSlice = append(dataSlice, e.Text)
-			// data := AmazonResult{Content: dataSlice}
-			// fmt.Println(data)
+			dataSlice = append(dataSlice, e.Text)
+			data := AmazonResult{Content: dataSlice}
+			fmt.Println(data)
 
-			// scrapedJSON, _ := json.MarshalIndent(data, "", "    ")
-			// fmt.Println(string(scrapedJSON))
+			scrapedJSON, _ := json.MarshalIndent(data, "", "    ")
+			fmt.Println(string(scrapedJSON))
 
-			// // write to JSON file
-			// _ = ioutil.WriteFile("output.json", scrapedJSON, 0644)
+			// write to JSON file
+			_ = ioutil.WriteFile("output.json", scrapedJSON, 0644)
 
-			// // to append to a file
-			// // create the file if it doesn't exists with O_CREATE, Set the file up for read write,
-			// // add the append flag and set the permission
-			// f, err := os.OpenFile("/var/log/debug-web.log", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
-			// if err != nil {
-			// 	log.Fatal(err)
-			// }
-			// // write to file, f.Write()
-			// f.Write(scrapedJSON)
+			// to append to a file
+			// create the file if it doesn't exists with O_CREATE, Set the file up for read write,
+			// add the append flag and set the permission
+			f, err := os.OpenFile("/var/log/debug-web.log", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
+			if err != nil {
+				log.Fatal(err)
+			}
+			// write to file, f.Write()
+			f.Write(scrapedJSON)
 
 		})
 	})
