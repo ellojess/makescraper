@@ -47,7 +47,7 @@ To get a local copy up and running follow these simple example steps.
    
 2. To run the bot
    ```sh
-   $ go build && go run ./main.go
+   $ go build && go run ./scrape.go
    ```
 
 <!-- ROADMAP -->
